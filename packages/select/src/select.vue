@@ -302,6 +302,10 @@
       popperAppendToBody: {
         type: Boolean,
         default: true
+      },
+      tagDeleteHandler: {
+        type: Function,
+        required: false
       }
     },
 
@@ -763,15 +767,24 @@
       },
 
       deleteTag(event, tag) {
-        let index = this.selected.indexOf(tag);
-        if (index > -1 && !this.selectDisabled) {
-          const value = this.value.slice();
-          value.splice(index, 1);
-          this.$emit('input', value);
-          this.emitChange(value);
-          this.$emit('remove-tag', tag.value);
+        let deletingAction = function() {
+          let index = this.selected.indexOf(tag);
+          if (index > -1 && !this.selectDisabled) {
+            const value = this.value.slice();
+            value.splice(index, 1);
+            this.$emit('input', value);
+            this.emitChange(value);
+            this.$emit('remove-tag', tag.value);
+          }
+          event.stopPropagation();
+        }.bind(this);
+
+        if (this.tagDeleteHandler && !this.tagDeleteHandler(event, tag, deletingAction)) {
+          event.stopPropagation();
+          return;
         }
-        event.stopPropagation();
+
+        deletingAction();
       },
 
       onInputChange() {
